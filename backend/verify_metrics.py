@@ -78,3 +78,4 @@ print("=== CROSS-CHECK ===")
 print(f"  Hand-calc F1={f1:.6f}  API F1={bl['f1']:.6f}  Match={abs(f1-bl['f1'])<1e-9}")
 print(f"  API returns single 'confusion_matrix' key — it contains CONTEXT-AWARE values only.")
 print(f"  Baseline confusion matrix is NOT in the 'confusion_matrix' top-level key.")
+
