@@ -48,17 +48,6 @@ flowchart TD
 
 The downstream AI interaction is simulated in the current prototype.
 
-## Technology Stack
-
-| Component | Technology |
-|---|---|
-| Frontend | React 19, TypeScript, Vite |
-| Styling | Tailwind CSS v4 |
-| Backend | Python, FastAPI |
-| Detection | Regex-based entity detection and contextual heuristics |
-| Policy Enforcement | Role- and destination-aware rules |
-| Testing | pytest |
-| Evaluation | Deterministic synthetic benchmark |
 
 ## Getting Started
 
