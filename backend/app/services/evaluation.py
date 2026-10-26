@@ -8,20 +8,22 @@ from app.services.detection import detect_entities
 from app.services.policy import evaluate_policy
 from app.services.redaction import sanitize_text
 
-# ─── Evaluation Dataset ────────────────────────────────────────────────────────
+# ─── Evaluation Benchmark Dataset ─────────────────────────────────────────────
 # Ground-truth definition:
 # `expected_sensitive` indicates whether the privacy policy REQUIRES PROTECTION
 # (action is "redact" or "block") for the given role and destination.
 # If an authorized role (e.g. HR Administrator in internal system) is permitted
 # to view data, protection is not required -> expected_sensitive = False.
-TEST_CASES = [
+TEST_CASES: list[dict[str, Any]] = [
     {
-        "id": "public-info",
+        "id": "public-salary-bands",
         "text": "Engineer salary bands are available on the company's public careers page.",
         "role": "General Employee",
         "destination": "Local AI model",
         "expected_action": "allow",
         "expected_sensitive": False,
+        "category": "Public Information",
+        "rationale": "Publicly accessible salary band data contains no personal PII.",
     },
     {
         "id": "confidential-compensation",
@@ -30,14 +32,18 @@ TEST_CASES = [
         "destination": "External AI service",
         "expected_action": "redact",
         "expected_sensitive": True,
+        "category": "Personal Compensation",
+        "rationale": "Personal compensation tied to a named individual must be sanitized before external transmission.",
     },
     {
-        "id": "credential-exposure",
+        "id": "admin-credential-exposure",
         "text": "The admin password is Mx7!qR2z.",
         "role": "General Employee",
         "destination": "External AI service",
         "expected_action": "block",
         "expected_sensitive": True,
+        "category": "Credential Exfiltration",
+        "rationale": "Exfiltration of administrative password must fail closed and block downstream dispatch.",
     },
     {
         "id": "public-password-guidance",
@@ -46,22 +52,68 @@ TEST_CASES = [
         "destination": "Local AI model",
         "expected_action": "allow",
         "expected_sensitive": False,
+        "category": "Security Governance",
+        "rationale": "Generic password complexity standard contains no actual secret.",
     },
     {
-        "id": "ambiguous-contextual",
+        "id": "ambiguous-compensation-context",
         "text": "Anita's compensation was revised upward during the latest review.",
         "role": "General Employee",
         "destination": "External AI service",
         "expected_action": "redact",
         "expected_sensitive": True,
+        "category": "Contextual Sensitivity",
+        "rationale": "Contextual disclosure of employee compensation discussion without explicit numeric amount.",
     },
     {
-        "id": "hr-internal-compensation",
+        "id": "hr-authorized-internal-review",
         "text": "Anita's salary is being raised to ₹18 lakh.",
         "role": "HR Administrator",
         "destination": "Internal reporting system",
         "expected_action": "allow",
         "expected_sensitive": False,
+        "category": "Role Authorization",
+        "rationale": "HR Administrator is explicitly authorized to view compensation within the internal reporting boundary.",
+    },
+    {
+        "id": "personal-contact-email",
+        "text": "Send the quarterly customer report to priya@example.com.",
+        "role": "General Employee",
+        "destination": "External AI service",
+        "expected_action": "redact",
+        "expected_sensitive": True,
+        "category": "Personal Contact PII",
+        "rationale": "Personal email address must be redacted prior to sending to an external AI model.",
+    },
+    {
+        "id": "benign-scheduling-hr-keywords",
+        "text": "Please schedule the team appraisal review meeting for next Tuesday.",
+        "role": "General Employee",
+        "destination": "Local AI model",
+        "expected_action": "allow",
+        "expected_sensitive": False,
+        "category": "Benign Communication",
+        "rationale": "Routine calendar scheduling containing HR terminology without confidential disclosures.",
+    },
+    {
+        "id": "benign-password-sop-doc",
+        "text": "Review the standard operating procedure for password rotation.",
+        "role": "Security Administrator",
+        "destination": "Local AI model",
+        "expected_action": "allow",
+        "expected_sensitive": False,
+        "category": "Security Documentation",
+        "rationale": "Administrative procedure reference containing 'password' keyword without credential material.",
+    },
+    {
+        "id": "privileged-credential-exfiltration",
+        "text": "Production database root credential: P@ssw0rd99#.",
+        "role": "Security Administrator",
+        "destination": "External AI service",
+        "expected_action": "block",
+        "expected_sensitive": True,
+        "category": "Privileged Exfiltration",
+        "rationale": "Even security administrators cannot transmit raw database credentials to external AI systems.",
     },
 ]
 
@@ -123,6 +175,8 @@ def run_evaluation() -> dict[str, Any]:
 
         results.append({
             "id": case["id"],
+            "category": case.get("category", "General"),
+            "rationale": case.get("rationale", ""),
             "expected_action": case["expected_action"],
             "actual_action": action,
             "expected_sensitive": expected_sensitive,

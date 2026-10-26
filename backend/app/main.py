@@ -91,7 +91,7 @@ def _to_policy_rule(raw: dict[str, Any]) -> dict[str, Any]:
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "ContextGuard"}
+    return {"status": "ok", "service": "ContextGuard Enterprise Security"}
 
 
 @app.get("/api/policies", response_model=PolicyList)
@@ -174,6 +174,8 @@ def scan(request: ScanRequest) -> ScanResponse:
         detection_method=context.get("source", "heuristic"),
         downstream=downstream,
         event_id=event_id,
+        evaluated_role=request.role,
+        evaluated_destination=request.destination,
     )
 
 

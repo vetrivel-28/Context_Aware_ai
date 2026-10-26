@@ -23,6 +23,8 @@ class ScanResponse(BaseModel):
     detection_method: str
     downstream: dict[str, Any]
     event_id: str
+    evaluated_role: str
+    evaluated_destination: str
 
 
 class PolicyRule(BaseModel):

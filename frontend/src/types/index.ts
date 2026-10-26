@@ -39,6 +39,8 @@ export interface ScanResult {
   detection_method: string
   downstream: DownstreamResult
   event_id: string
+  evaluated_role?: string
+  evaluated_destination?: string
 }
 
 export interface PolicyRule {
@@ -85,6 +87,8 @@ export interface EvaluationMetrics {
 
 export interface EvaluationResult {
   id: string
+  category?: string
+  rationale?: string
   expected_action: string
   actual_action: string
   expected_sensitive: boolean
@@ -117,4 +121,5 @@ export interface Scenario {
   label: string
   text: string
   expected: string
+  category?: string
 }
