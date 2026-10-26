@@ -1,9 +1,44 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-cg-lime: #E5EFC1;
+  --color-cg-sage: #A2D5AB;
+  --color-cg-teal: #39AEA9;
+  --color-cg-slate-teal: #557B83;
+  --color-cg-ink: #121C1E;
+  --color-cg-ink-surface: #182528;
+  --color-cg-ink-subtle: #23363A;
+  --color-cg-canvas: #F6F8F6;
+  --color-cg-card: #FFFFFF;
+  --color-cg-border: #D8E2DC;
+  --color-cg-border-subtle: #E8EFEA;
+
+  --color-cg-allow: #206E4E;
+  --color-cg-allow-bg: #EEF8F2;
+  --color-cg-allow-border: #A2D5AB;
+
+  --color-cg-redact: #8F5E0A;
+  --color-cg-redact-bg: #FEF9EE;
+  --color-cg-redact-border: #ECCF96;
+
+  --color-cg-block: #A82525;
+  --color-cg-block-bg: #FDF2F1;
+  --color-cg-block-border: #F3B9B2;
+}
+
 :root {
-  color: #0f172a;
-  background-color: #f8fafc;
-  font-family: Inter, 'Segoe UI', sans-serif;
+  --cg-lime: #E5EFC1;
+  --cg-sage: #A2D5AB;
+  --cg-teal: #39AEA9;
+  --cg-slate-teal: #557B83;
+  --cg-ink: #121C1E;
+  --cg-ink-surface: #182528;
+  --cg-canvas: #F6F8F6;
+  --cg-border: #D8E2DC;
+
+  color: #121C1E;
+  background-color: #F6F8F6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -17,13 +52,14 @@
 }
 
 html {
-  background: #f8fafc;
+  background: #F6F8F6;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f8fafc;
+  background: #F6F8F6;
+  color: #121C1E;
 }
 
 button,
