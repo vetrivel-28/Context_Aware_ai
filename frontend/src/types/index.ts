@@ -95,17 +95,21 @@ export interface EvaluationResult {
   context: ContextClassification
 }
 
+export interface ConfusionMatrix {
+  tp: number
+  fp: number
+  tn: number
+  fn: number
+}
+
 export interface EvaluationResponse {
   dataset: unknown[]
   results: EvaluationResult[]
   baseline: EvaluationMetrics
   context_aware: EvaluationMetrics
-  confusion_matrix: {
-    tp: number
-    fp: number
-    tn: number
-    fn: number
-  }
+  context_aware_confusion_matrix?: ConfusionMatrix
+  baseline_confusion_matrix?: ConfusionMatrix
+  confusion_matrix: ConfusionMatrix
 }
 
 export interface Scenario {

@@ -739,6 +739,8 @@ function EvaluationPage({
   isLoading: boolean
   onRun: () => void
 }) {
+  const [cmTab, setCmTab] = useState<'context' | 'baseline'>('context')
+
   const chartData = evaluation
     ? [
         { name: 'Precision', baseline: evaluation.baseline.precision, context: evaluation.context_aware.precision },
@@ -807,26 +809,65 @@ function EvaluationPage({
             </div>
 
             {/* Confusion matrix + chart */}
-            <div className="mt-6 grid gap-6 xl:grid-cols-[0.65fr_1.35fr]">
+            <div className="mt-6 grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="mb-3 text-sm font-semibold text-slate-800">Confusion matrix (context-aware)</div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: 'tp', label: 'True Positives', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-                    { key: 'fp', label: 'False Positives', color: 'bg-amber-50 text-amber-800 border-amber-200' },
-                    { key: 'tn', label: 'True Negatives', color: 'bg-slate-50 text-slate-800 border-slate-200' },
-                    { key: 'fn', label: 'False Negatives', color: 'bg-rose-50 text-rose-800 border-rose-200' },
-                  ].map(({ key, label, color }) => (
-                    <div key={key} className={`rounded-xl border p-3 ${color}`}>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
-                      <div className="mt-1 text-3xl font-bold">
-                        {evaluation.confusion_matrix[key as keyof typeof evaluation.confusion_matrix]}
-                      </div>
-                    </div>
-                  ))}
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-sm font-semibold text-slate-800">Confusion matrix</div>
+                  <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setCmTab('context')}
+                      className={`rounded-md px-2 py-0.5 font-medium transition ${
+                        cmTab === 'context' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Context-aware
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCmTab('baseline')}
+                      className={`rounded-md px-2 py-0.5 font-medium transition ${
+                        cmTab === 'baseline' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Baseline
+                    </button>
+                  </div>
                 </div>
+
+                {(() => {
+                  const activeCm =
+                    cmTab === 'context'
+                      ? (evaluation.context_aware_confusion_matrix ?? evaluation.confusion_matrix)
+                      : (evaluation.baseline_confusion_matrix ?? {
+                          tp: evaluation.baseline.true_positives,
+                          fp: evaluation.baseline.false_positives,
+                          tn: evaluation.baseline.true_negatives,
+                          fn: evaluation.baseline.false_negatives,
+                        })
+                  return (
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: 'tp', label: 'True Positives', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+                        { key: 'fp', label: 'False Positives', color: 'bg-amber-50 text-amber-800 border-amber-200' },
+                        { key: 'tn', label: 'True Negatives', color: 'bg-slate-50 text-slate-800 border-slate-200' },
+                        { key: 'fn', label: 'False Negatives', color: 'bg-rose-50 text-rose-800 border-rose-200' },
+                      ].map(({ key, label, color }) => (
+                        <div key={key} className={`rounded-xl border p-3 ${color}`}>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
+                          <div className="mt-1 text-3xl font-bold">
+                            {activeCm[key as keyof typeof activeCm]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+
                 <div className="mt-3 text-[10px] text-slate-400">
-                  Small demo dataset (6 cases). Not representative of production accuracy.
+                  {cmTab === 'context'
+                    ? 'Context-aware engine: evaluates context, role authorization, and destination.'
+                    : 'Keyword baseline: flags any prompt containing sensitive keywords regardless of context/role.'}
                 </div>
               </div>
 

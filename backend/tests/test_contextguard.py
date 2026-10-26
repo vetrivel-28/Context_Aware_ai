@@ -376,6 +376,8 @@ class TestEvaluationAPI:
         assert "context_aware" in data
         assert "baseline" in data
         assert "confusion_matrix" in data
+        assert "context_aware_confusion_matrix" in data
+        assert "baseline_confusion_matrix" in data
         assert "results" in data
 
     def test_evaluation_metrics_are_calculated(self):
@@ -397,6 +399,63 @@ class TestEvaluationAPI:
         cm = data["confusion_matrix"]
         total = cm["tp"] + cm["fp"] + cm["tn"] + cm["fn"]
         assert total == len(data["dataset"])
+
+    def test_evaluation_metrics_agree_with_confusion_matrix(self):
+        """Regression test: verify precision, recall, F1, FPR, FNR strictly match confusion matrix."""
+        resp = client.post("/api/evaluate")
+        data = resp.json()
+
+        # Context-aware verification
+        ca_cm = data["context_aware_confusion_matrix"]
+        ca = data["context_aware"]
+        c_tp, c_fp, c_tn, c_fn = ca_cm["tp"], ca_cm["fp"], ca_cm["tn"], ca_cm["fn"]
+
+        exp_c_prec = c_tp / (c_tp + c_fp) if (c_tp + c_fp) else 0.0
+        exp_c_rec = c_tp / (c_tp + c_fn) if (c_tp + c_fn) else 0.0
+        exp_c_f1 = (2 * exp_c_prec * exp_c_rec / (exp_c_prec + exp_c_rec)) if (exp_c_prec + exp_c_rec) else 0.0
+        exp_c_fpr = c_fp / (c_fp + c_tn) if (c_fp + c_tn) else 0.0
+        exp_c_fnr = c_fn / (c_fn + c_tp) if (c_fn + c_tp) else 0.0
+
+        assert ca["precision"] == pytest.approx(exp_c_prec)
+        assert ca["recall"] == pytest.approx(exp_c_rec)
+        assert ca["f1"] == pytest.approx(exp_c_f1)
+        assert ca["false_positive_rate"] == pytest.approx(exp_c_fpr)
+        assert ca["false_negative_rate"] == pytest.approx(exp_c_fnr)
+
+        # Baseline verification
+        bl_cm = data["baseline_confusion_matrix"]
+        bl = data["baseline"]
+        b_tp, b_fp, b_tn, b_fn = bl_cm["tp"], bl_cm["fp"], bl_cm["tn"], bl_cm["fn"]
+
+        exp_b_prec = b_tp / (b_tp + b_fp) if (b_tp + b_fp) else 0.0
+        exp_b_rec = b_tp / (b_tp + b_fn) if (b_tp + b_fn) else 0.0
+        exp_b_f1 = (2 * exp_b_prec * exp_b_rec / (exp_b_prec + exp_b_rec)) if (exp_b_prec + exp_b_rec) else 0.0
+        exp_b_fpr = b_fp / (b_fp + b_tn) if (b_fp + b_tn) else 0.0
+        exp_b_fnr = b_fn / (b_fn + b_tp) if (b_fn + b_tp) else 0.0
+
+        assert bl["precision"] == pytest.approx(exp_b_prec)
+        assert bl["recall"] == pytest.approx(exp_b_rec)
+        assert bl["f1"] == pytest.approx(exp_b_f1)
+        assert bl["false_positive_rate"] == pytest.approx(exp_b_fpr)
+        assert bl["false_negative_rate"] == pytest.approx(exp_b_fnr)
+
+    def test_both_engines_use_same_ground_truth(self):
+        """Ensure both baseline and context-aware evaluate the same test cases with matching expected actions."""
+        resp = client.post("/api/evaluate")
+        data = resp.json()
+        assert len(data["dataset"]) == 6
+        for r in data["results"]:
+            assert "expected_sensitive" in r
+            assert "actual_sensitive" in r
+            assert "expected_action" in r
+            assert "actual_action" in r
+
+    def test_evaluation_blocked_result_does_not_leak_raw_credential(self):
+        resp = client.post("/api/evaluate")
+        data = resp.json()
+        cred_result = next(r for r in data["results"] if r["id"] == "credential-exposure")
+        assert cred_result["actual_action"] == "block"
+        assert "Mx7!qR2z" not in cred_result["sanitized"]
 
 
 class TestBaselineEvaluation:
